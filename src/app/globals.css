@@ -1,0 +1,286 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 20% 98%;
+    --foreground: 20 14% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 8%;
+
+    /* Primary: Vibrant Orange */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Sky Blue */
+    --secondary: 199 89% 48%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 30 15% 94%;
+    --muted-foreground: 20 10% 45%;
+    --accent: 199 89% 95%;
+    --accent-foreground: 199 89% 25%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 25 20% 88%;
+    --input: 25 20% 92%;
+    --ring: 25 95% 53%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: hsl(var(--muted)); }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--primary) / 0.4); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.7); }
+}
+
+@layer components {
+  /* ── Glass Panels ── */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(249, 115, 22, 0.12);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 2px solid hsl(25 95% 53% / 0.15);
+    box-shadow: 0 2px 16px rgba(249, 115, 22, 0.08);
+  }
+
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ── Brand Gradient Backgrounds ── */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 40%, #0ea5e9 100%);
+  }
+
+  .bg-hero-gradient {
+    background: linear-gradient(160deg,
+      #fff7ed 0%,
+      #ffedd5 30%,
+      #e0f2fe 70%,
+      #f0f9ff 100%
+    );
+  }
+
+  .bg-orange-gradient {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+  }
+
+  .bg-sky-gradient {
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  }
+
+  /* ── Button Variants ── */
+  .btn-primary {
+    @apply px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-200;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-sky {
+    @apply px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-200;
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+  }
+  .btn-sky:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+  }
+
+  .btn-outline-orange {
+    @apply px-5 py-2.5 rounded-xl font-semibold text-sm border-2 transition-all duration-200;
+    border-color: #f97316;
+    color: #f97316;
+  }
+  .btn-outline-orange:hover {
+    background: #f97316;
+    color: white;
+  }
+
+  /* ── Cards ── */
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(249, 115, 22, 0.15);
+  }
+
+  .product-card {
+    @apply bg-white rounded-2xl border border-orange-100 overflow-hidden transition-all duration-300;
+  }
+  .product-card:hover {
+    border-color: #f97316;
+    box-shadow: 0 8px 32px rgba(249, 115, 22, 0.18);
+    transform: translateY(-3px);
+  }
+
+  /* ── Badges ── */
+  .badge-orange {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white;
+  }
+
+  .badge-sky {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold;
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    color: white;
+  }
+
+  .badge-green {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500 text-white;
+  }
+
+  .badge-gold {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-amber-900;
+  }
+
+  /* ── Category Pill ── */
+  .cat-pill {
+    @apply flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer;
+    color: #374151;
+    border: 1px solid transparent;
+  }
+  .cat-pill:hover {
+    background: #fff7ed;
+    border-color: #f97316;
+    color: #ea580c;
+  }
+  .cat-pill.active {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  }
+
+  /* ── Input Fields ── */
+  .input-field {
+    @apply w-full px-4 py-2.5 text-sm rounded-xl border bg-white text-slate-800 transition-all duration-200 focus:outline-none;
+    border-color: hsl(var(--border));
+  }
+  .input-field:focus {
+    border-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  }
+
+  /* ── Shimmer Skeleton ── */
+  .skeleton {
+    background: linear-gradient(90deg, #f5f5f5 25%, #e8e8e8 50%, #f5f5f5 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ── Flash Sale Timer ── */
+  .timer-block {
+    @apply flex flex-col items-center justify-center w-10 h-10 rounded-lg text-white font-black text-base leading-none;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .timer-label {
+    @apply text-[9px] font-semibold uppercase opacity-80;
+  }
+
+  /* ── Tracking Steps ── */
+  .track-step-done {
+    @apply w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+  }
+  .track-step-active {
+    @apply w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border-2;
+    border-color: #f97316;
+    animation: pulse-ring 1.4s ease-out infinite;
+  }
+  .track-step-pending {
+    @apply w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100 border-2 border-gray-200;
+  }
+
+  /* ── Payment Method Card ── */
+  .payment-card {
+    @apply flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200;
+    border-color: #e5e7eb;
+  }
+  .payment-card:hover { border-color: #fb923c; background: #fff7ed; }
+  .payment-card.selected {
+    border-color: #f97316;
+    background: #fff7ed;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  }
+
+  /* ── Scrollbar Hide ── */
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  /* ── Text Gradient ── */
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #f97316, #dc2626);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-sky {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Announcement Ticker ── */
+  .ticker-wrap {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ticker-content {
+    display: inline-block;
+    animation: ticker 30s linear infinite;
+  }
+
+  /* ── KYC Status ── */
+  .kyc-pending  { @apply bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-lg text-xs font-semibold; }
+  .kyc-approved { @apply bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1 rounded-lg text-xs font-semibold; }
+  .kyc-rejected { @apply bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded-lg text-xs font-semibold; }
+
+  /* ── Escrow Status ── */
+  .escrow-held      { @apply bg-amber-50 border border-amber-200 text-amber-800; }
+  .escrow-eligible  { @apply bg-emerald-50 border border-emerald-200 text-emerald-800; }
+  .escrow-released  { @apply bg-sky-50 border border-sky-200 text-sky-800; }
+}

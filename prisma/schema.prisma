@@ -1,0 +1,155 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  VENDOR
+  CUSTOMER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum SubOrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String         @unique
+  password      String
+  role          Role           @default(CUSTOMER)
+  image         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  vendorProfile VendorProfile?
+  orders        Order[]
+  reviews       Review[]
+}
+
+model VendorProfile {
+  id             String      @id @default(cuid())
+  userId         String      @unique
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName      String
+  slug           String      @unique
+  logo           String?
+  banner         String?
+  bio            String?
+  isApproved     Boolean     @default(false)
+  commissionRate Float       @default(10.0) // Platform percentage (e.g. 10%)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  products       Product[]
+  subOrders      SubOrder[]
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  createdAt   DateTime  @default(now())
+
+  products    Product[]
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  vendorId    String
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category      @relation(fields: [categoryId], references: [id])
+  title       String
+  slug        String        @unique
+  description String
+  price       Float
+  stock       Int           @default(0)
+  images      String[]
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  orderItems  OrderItem[]
+  reviews     Review[]
+}
+
+model Order {
+  id                    String        @id @default(cuid())
+  customerId            String
+  customer              User          @relation(fields: [customerId], references: [id])
+  customerName          String?
+  customerEmail         String?
+  shippingAddress       String?
+  totalAmount           Float
+  paymentStatus         PaymentStatus @default(PENDING)
+  orderStatus           OrderStatus   @default(PENDING)
+  stripePaymentIntentId String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  subOrders             SubOrder[]
+}
+
+model SubOrder {
+  id               String         @id @default(cuid())
+  orderId          String
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendorId         String
+  vendor           VendorProfile  @relation(fields: [vendorId], references: [id])
+  subtotal         Float
+  commissionAmount Float
+  payoutAmount     Float
+  status           SubOrderStatus @default(PENDING)
+  trackingNumber   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  items            OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  subOrderId String
+  subOrder   SubOrder @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  quantity   Int
+  unitPrice  Float
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id])
+  rating     Int      @default(5)
+  comment    String
+  createdAt  DateTime @default(now())
+}
