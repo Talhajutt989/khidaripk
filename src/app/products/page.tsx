@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useMarketplaceStore } from '@/lib/store';
@@ -12,7 +12,8 @@ function ProductsContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category') || 'all';
   const searchParam = searchParams.get('search') || '';
-  const { currentCity } = useMarketplaceStore();
+  const { currentCity, products } = useMarketplaceStore();
+  const allProducts = products && products.length > 0 ? products : INITIAL_PRODUCTS;
 
   const [activeCategory, setActiveCategory] = useState(categoryParam);
   const [searchQuery, setSearchQuery] = useState(searchParam);
@@ -23,13 +24,50 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState('relevance');
   const [showFilters, setShowFilters] = useState(false);
 
-  const filtered = INITIAL_PRODUCTS.filter((p) => {
-    if (activeCategory !== 'all') {
+  useEffect(() => {
+    setActiveCategory(categoryParam);
+  }, [categoryParam]);
+
+  useEffect(() => {
+    setSearchQuery(searchParam);
+  }, [searchParam]);
+
+  const q = (searchQuery || searchParam).trim().toLowerCase();
+
+  const filtered = allProducts.filter((p) => {
+    if (q) {
+      const titleMatch = p.title.toLowerCase().includes(q);
+      const descMatch = p.description.toLowerCase().includes(q);
+      const catMatch = p.categoryName?.toLowerCase().includes(q);
+      const vendorMatch = p.vendorName?.toLowerCase().includes(q);
+      const tagMatch = p.tags?.some((t) => t.toLowerCase().includes(q));
+
+      // Intelligent Synonym Matching
+      let synonymMatch = false;
+      if (q.includes('watch') || q.includes('ghadi') || q.includes('ghari') || q.includes('gari') || q.includes('clock')) {
+        synonymMatch = p.categoryId === 'cat_watches' || p.categoryName?.toLowerCase().includes('watch');
+      } else if (q.includes('phone') || q.includes('mobile') || q.includes('cell') || q.includes('gadget')) {
+        synonymMatch = p.categoryId === 'cat_electronics' || p.categoryName?.toLowerCase().includes('electronics');
+      } else if (q.includes('shirt') || q.includes('cloth') || q.includes('kapra') || q.includes('suit') || q.includes('lawn') || q.includes('kameez')) {
+        synonymMatch = p.categoryId === 'cat_apparel' || p.categoryName?.toLowerCase().includes('apparel');
+      } else if (q.includes('shoe') || q.includes('chappal') || q.includes('footwear') || q.includes('joota')) {
+        synonymMatch = p.categoryId === 'cat_footwear' || p.categoryName?.toLowerCase().includes('footwear');
+      } else if (q.includes('mango') || q.includes('aam') || q.includes('fruit') || q.includes('sabzi') || q.includes('grocery')) {
+        synonymMatch = p.categoryId === 'cat_groceries' || p.categoryName?.toLowerCase().includes('groceries');
+      } else if (q.includes('perfume') || q.includes('attar') || q.includes('oud') || q.includes('khushboo')) {
+        synonymMatch = p.categoryId === 'cat_fragrances' || p.categoryName?.toLowerCase().includes('fragrance');
+      }
+
+      if (q.includes('watch') || q.includes('ghadi') || q.includes('ghari') || q.includes('cloth') || q.includes('shirt') || q.includes('suit') || q.includes('mobile') || q.includes('phone') || q.includes('shoe')) {
+        if (!titleMatch && !descMatch && !catMatch && !tagMatch && !synonymMatch) return false;
+      } else {
+        if (!titleMatch && !descMatch && !catMatch && !vendorMatch && !tagMatch && !synonymMatch) return false;
+      }
+    } else if (activeCategory !== 'all') {
       const cat = INITIAL_CATEGORIES.find((c) => c.id === activeCategory || c.slug === activeCategory);
       if (cat && p.categoryId !== cat.id) return false;
     }
-    if (searchQuery && !p.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !p.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+
     if (minPrice && p.price < Number(minPrice)) return false;
     if (maxPrice && p.price > Number(maxPrice)) return false;
     if (selectedCity !== 'all' && p.vendorCity.toLowerCase() !== selectedCity.toLowerCase()) return false;

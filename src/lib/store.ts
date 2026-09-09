@@ -38,6 +38,8 @@ interface MarketplaceState {
   closeAuthModal: () => void;
   loginUser: (email: string, password: string) => boolean;
   registerUser: (data: Partial<User> & { password: string }) => boolean;
+  deleteUser: (userId: string) => void;
+  banUser: (userId: string) => void;
 
   // ── Location ──────────────────────────────
   currentCity: string;
@@ -132,20 +134,40 @@ export const useMarketplaceStore = create<MarketplaceState>()(
         set({ authModal: { isOpen: false, mode: 'login' } });
       },
 
-      loginUser: (email, _password) => {
+      loginUser: (email, password) => {
         const { users } = get();
-        // Demo: find user by email (no real password check in mock)
         const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-        if (found) {
-          get().setCurrentUser(found);
-          return true;
+        if (!found) {
+          get().addToast({
+            type: 'error',
+            title: 'Login Failed',
+            message: 'Email یا password غلط ہے۔ دوبارہ کوشش کریں۔',
+          });
+          return false;
         }
-        get().addToast({
-          type: 'error',
-          title: 'Login Failed',
-          message: 'Email یا password غلط ہے۔ دوبارہ کوشش کریں۔',
-        });
-        return false;
+        // Admin requires EXACT password match
+        if (found.role === 'ADMIN') {
+          const ADMIN_PASSWORD = 'Kharidari@2024';
+          if (password !== ADMIN_PASSWORD) {
+            get().addToast({
+              type: 'error',
+              title: 'Admin Login Failed',
+              message: 'Admin password غلط ہے۔',
+            });
+            return false;
+          }
+        }
+        // Dynamically set name based on logged-in email prefix if it's admin or default
+        const emailPrefix = email.split('@')[0];
+        const formattedName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+        const userToLogin = {
+          ...found,
+          image: found.role === 'ADMIN' ? '' : found.image,
+          name: found.role === 'ADMIN' ? (formattedName === 'Admin' ? 'Admin' : formattedName) : found.name
+        };
+
+        get().setCurrentUser(userToLogin);
+        return true;
       },
 
       registerUser: (data) => {
@@ -174,6 +196,41 @@ export const useMarketplaceStore = create<MarketplaceState>()(
         set((state) => ({ users: [...state.users, newUser] }));
         get().setCurrentUser(newUser);
         return true;
+      },
+
+      deleteUser: (userId) => {
+        const { users, currentUser } = get();
+        const target = users.find(u => u.id === userId);
+        if (!target) return;
+        // Cannot delete admin or yourself
+        if (target.role === 'ADMIN') {
+          get().addToast({ type: 'error', title: 'ممنوع', message: 'Admin account delete نہیں کیا جا سکتا۔' });
+          return;
+        }
+        set((state) => ({ users: state.users.filter(u => u.id !== userId) }));
+        // If this user is currently logged in, log them out
+        if (currentUser?.id === userId) {
+          set({ currentUser: null, isAuthenticated: false, cart: [] });
+        }
+        get().addToast({
+          type: 'success',
+          title: 'Account Delete ✓',
+          message: `${target.name} کا account platform سے ہٹا دیا گیا۔`,
+        });
+      },
+
+      banUser: (userId) => {
+        const { users } = get();
+        const target = users.find(u => u.id === userId);
+        if (!target || target.role === 'ADMIN') return;
+        set((state) => ({
+          users: state.users.map(u => u.id === userId ? { ...u, isBanned: true } : u),
+        }));
+        get().addToast({
+          type: 'warning',
+          title: 'User Banned',
+          message: `${target.name} کو platform سے ban کر دیا گیا۔`,
+        });
       },
 
       // ── Location ──────────────────────────────

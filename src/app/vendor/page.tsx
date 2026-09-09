@@ -321,6 +321,7 @@ export default function VendorPage() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'kyc' | 'payouts'>('dashboard');
   const [showAddProduct, setShowAddProduct] = useState(false);
 
+  // ── Not logged in ──
   if (!isAuthenticated || !currentUser) {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
@@ -332,14 +333,31 @@ export default function VendorPage() {
     );
   }
 
-  // Find vendor profile
+  // ── Admin should use /admin portal, not vendor portal ──
+  if (currentUser.role === 'ADMIN') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center">
+        <div className="w-20 h-20 rounded-2xl bg-orange-50 border-2 border-orange-200 flex items-center justify-center mx-auto mb-6">
+          <ShieldCheck className="w-10 h-10 text-orange-400" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900">Admin Account</h2>
+        <p className="text-sm text-slate-500 mt-2 mb-6">
+          Admin کے لیے Vendor portal نہیں ہے۔<br />
+          براہ کرم Admin Console استعمال کریں۔
+        </p>
+        <Link href="/admin" className="btn-primary px-6 py-3 inline-block">
+          Admin Console کھولیں →
+        </Link>
+      </div>
+    );
+  }
+
+  // ── Find THIS seller's own vendor profile (no other seller's data) ──
+  // currentUser.vendorProfileId links user to vendor profile
   const vendorProfile = vendors.find(v => v.userId === currentUser.id);
 
-  // For demo, allow any logged-in user to see vendor page
-  const isVendor = currentUser.role === 'VENDOR' || currentUser.role === 'ADMIN';
-
-  // If not a vendor - show KYC signup
-  if (!isVendor && currentUser.role === 'CUSTOMER') {
+  // ── Customer: show KYC signup ──
+  if (currentUser.role === 'CUSTOMER') {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10">
         <div className="text-center mb-8">
@@ -357,12 +375,16 @@ export default function VendorPage() {
     );
   }
 
-  // Vendor Dashboard
-  const myProducts = products.filter(p => p.vendorId === vendorProfile?.id);
-  const myOrders = orders.filter(o => o.subOrders.some(s => s.vendorId === vendorProfile?.id));
-  const myEscrow = escrowTransactions.filter(e => e.vendorId === vendorProfile?.id);
+  // ── VENDOR DASHBOARD — strictly filtered to THIS vendor only ──
+  // All data is filtered by vendorProfile.id — other sellers' data is NEVER shown
+  const myVendorId = vendorProfile?.id;
+  const myProducts = products.filter(p => p.vendorId === myVendorId);
+  const myOrders = orders.filter(o => o.subOrders.some(s => s.vendorId === myVendorId));
+  const myEscrow = escrowTransactions.filter(e => e.vendorId === myVendorId);
   const pendingEscrow = myEscrow.filter(e => e.status === 'HELD').reduce((s, e) => s + e.amount, 0);
   const eligiblePayout = myEscrow.filter(e => e.status === 'ELIGIBLE').reduce((s, e) => s + e.amount, 0);
+  // My own sales total only
+  const myTotalSales = myOrders.flatMap(o => o.subOrders.filter(s => s.vendorId === myVendorId)).reduce((sum, sub) => sum + sub.subtotal, 0);
 
   const TABS = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -434,7 +456,7 @@ export default function VendorPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Total Sales', value: formatPKR(vendorProfile?.totalSales || 0), icon: <TrendingUp className="w-5 h-5 text-orange-500" />, bg: 'bg-orange-50' },
+              { label: 'Total Sales', value: formatPKR(myTotalSales || vendorProfile?.totalSales || 0), icon: <TrendingUp className="w-5 h-5 text-orange-500" />, bg: 'bg-orange-50' },
               { label: 'Escrow (Held)', value: formatPKR(pendingEscrow), icon: <Clock className="w-5 h-5 text-amber-500" />, bg: 'bg-amber-50' },
               { label: 'Eligible Payout', value: formatPKR(eligiblePayout), icon: <Banknote className="w-5 h-5 text-emerald-500" />, bg: 'bg-emerald-50' },
               { label: 'Total Withdrawn', value: formatPKR(vendorProfile?.totalWithdrawn || 0), icon: <Wallet className="w-5 h-5 text-sky-500" />, bg: 'bg-sky-50' },

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMarketplaceStore } from '@/lib/store';
 import { PAKISTAN_CITIES } from '@/lib/geo';
-import { INITIAL_CATEGORIES } from '@/lib/data';
+import { INITIAL_CATEGORIES, INITIAL_PRODUCTS, formatPKR } from '@/lib/data';
 import {
   ShoppingBag, Search, MapPin, ChevronDown, Menu, X,
   User, LogOut, LayoutDashboard, ShieldCheck, Package,
@@ -28,22 +28,56 @@ export function Navbar() {
   const router = useRouter();
   const {
     currentUser, isAuthenticated, logout, openAuthModal,
-    openCart, getCartCount, currentCity, setCurrentCity,
+    openCart, getCartCount, currentCity, setCurrentCity, products
   } = useMarketplaceStore();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCityOpen, setIsCityOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
 
+  const allProducts = products && products.length > 0 ? products : INITIAL_PRODUCTS;
   const cartCount = getCartCount();
+
+  const liveSearchMatches = searchQuery.trim()
+    ? allProducts.filter((p) => {
+        const q = searchQuery.trim().toLowerCase();
+        const titleMatch = p.title.toLowerCase().includes(q);
+        const descMatch = p.description.toLowerCase().includes(q);
+        const catMatch = p.categoryName?.toLowerCase().includes(q);
+        const vendorMatch = p.vendorName?.toLowerCase().includes(q);
+        const tagMatch = p.tags?.some((t) => t.toLowerCase().includes(q));
+
+        let synonymMatch = false;
+        if (q.includes('watch') || q.includes('ghadi') || q.includes('ghari') || q.includes('gari') || q.includes('clock')) {
+          synonymMatch = p.categoryId === 'cat_watches' || p.categoryName?.toLowerCase().includes('watch');
+        } else if (q.includes('phone') || q.includes('mobile') || q.includes('cell') || q.includes('gadget')) {
+          synonymMatch = p.categoryId === 'cat_electronics' || p.categoryName?.toLowerCase().includes('electronics');
+        } else if (q.includes('shirt') || q.includes('cloth') || q.includes('kapra') || q.includes('suit') || q.includes('lawn') || q.includes('kameez')) {
+          synonymMatch = p.categoryId === 'cat_apparel' || p.categoryName?.toLowerCase().includes('apparel');
+        } else if (q.includes('shoe') || q.includes('chappal') || q.includes('footwear') || q.includes('joota')) {
+          synonymMatch = p.categoryId === 'cat_footwear' || p.categoryName?.toLowerCase().includes('footwear');
+        } else if (q.includes('mango') || q.includes('aam') || q.includes('fruit') || q.includes('sabzi') || q.includes('grocery')) {
+          synonymMatch = p.categoryId === 'cat_groceries' || p.categoryName?.toLowerCase().includes('groceries');
+        } else if (q.includes('perfume') || q.includes('attar') || q.includes('oud') || q.includes('khushboo')) {
+          synonymMatch = p.categoryId === 'cat_fragrances' || p.categoryName?.toLowerCase().includes('fragrance');
+        }
+
+        if (q.includes('watch') || q.includes('ghadi') || q.includes('ghari') || q.includes('cloth') || q.includes('shirt') || q.includes('suit') || q.includes('mobile') || q.includes('phone') || q.includes('shoe')) {
+          return titleMatch || descMatch || catMatch || tagMatch || synonymMatch;
+        }
+        return titleMatch || descMatch || catMatch || vendorMatch || tagMatch || synonymMatch;
+      }).slice(0, 6)
+    : [];
 
   useEffect(() => {
     const handler = () => {
       setIsCityOpen(false);
       setIsUserMenuOpen(false);
       setIsCategoryMenuOpen(false);
+      setIsSearchFocused(false);
     };
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
@@ -144,13 +178,21 @@ export function Navbar() {
 
         {/* Search Bar */}
         <form
-          onSubmit={handleSearch}
+          onSubmit={(e) => {
+            handleSearch(e);
+            setIsSearchFocused(false);
+          }}
+          onClick={(e) => e.stopPropagation()}
           className="hidden md:flex flex-1 max-w-xl relative items-center"
         >
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsSearchFocused(true);
+            }}
+            onFocus={() => setIsSearchFocused(true)}
             placeholder="موبائل، کپڑے، آم، گھڑیاں... تلاش کریں"
             className="w-full pl-4 pr-12 py-2.5 text-sm rounded-xl border-2 border-orange-200 bg-orange-50/50 focus:outline-none focus:border-orange-400 focus:bg-white transition-all text-slate-800 placeholder:text-slate-400"
           />
@@ -161,63 +203,122 @@ export function Navbar() {
           >
             <Search className="w-4 h-4" />
           </button>
+
+          {/* Instant Search Suggestions Dropdown */}
+          {isSearchFocused && searchQuery.trim().length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-orange-100 py-2 z-50 overflow-hidden">
+              {liveSearchMatches.length === 0 ? (
+                <div className="px-4 py-4 text-xs text-slate-400 text-center">
+                  🔍 کوئی پروڈکٹ نہیں ملا ("{searchQuery}")
+                </div>
+              ) : (
+                <div>
+                  <div className="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex justify-between bg-slate-50">
+                    <span>Matching Products ({liveSearchMatches.length})</span>
+                    <span className="text-orange-500 font-semibold">Live Results</span>
+                  </div>
+                  {liveSearchMatches.map((prod) => (
+                    <Link
+                      key={prod.id}
+                      href={`/products/${prod.id}`}
+                      onClick={() => setIsSearchFocused(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors border-b border-slate-50 last:border-0"
+                    >
+                      <img src={prod.images[0]} alt={prod.title} className="w-10 h-10 rounded-lg object-cover border border-slate-100 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">{prod.title}</p>
+                        <p className="text-[10px] text-slate-400">{prod.categoryName} • 📍 {prod.vendorCity}</p>
+                      </div>
+                      <span className="text-xs font-black text-orange-600 shrink-0">{formatPKR(prod.price)}</span>
+                    </Link>
+                  ))}
+                  <button
+                    type="submit"
+                    className="w-full text-center py-2.5 bg-orange-50 hover:bg-orange-100 text-xs font-bold text-orange-600 border-t border-orange-100 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    تمام نتائج دیکھیں ("{searchQuery}") →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </form>
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {/* User Menu */}
           {isAuthenticated && currentUser ? (
-            <div className="relative hidden lg:block" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-orange-100 hover:border-orange-300 hover:bg-orange-50 transition-all"
-              >
-                {currentUser.image ? (
-                  <img src={currentUser.image} alt={currentUser.name} className="w-6 h-6 rounded-full object-cover" />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold">
-                    {currentUser.name[0]}
-                  </div>
-                )}
-                <span className="text-xs font-semibold text-slate-700 max-w-24 truncate">{currentUser.name.split(' ')[0]}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-orange-100 py-2 z-50">
-                  <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="text-xs font-bold text-slate-800">{currentUser.name}</p>
-                    <p className="text-[10px] text-slate-500">{currentUser.email}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${
-                      currentUser.role === 'ADMIN' ? 'bg-red-100 text-red-600' :
-                      currentUser.role === 'VENDOR' ? 'bg-sky-100 text-sky-600' :
-                      'bg-orange-100 text-orange-600'
-                    }`}>{currentUser.role}</span>
-                  </div>
-                  <Link href="/orders" onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-orange-50 hover:text-orange-600">
-                    <Package className="w-4 h-4" /> My Orders
+            <div className="flex items-center gap-2">
+              {currentUser.role === 'ADMIN' ? (
+                /* Admin: Direct Clickable Link to /admin + Logout Button */
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 bg-red-50/70 hover:bg-red-100 transition-all cursor-pointer"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
+                      <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-800">Admin</span>
                   </Link>
-                  {currentUser.role === 'VENDOR' && (
-                    <Link href="/vendor" onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-600">
-                      <LayoutDashboard className="w-4 h-4" /> Vendor Dashboard
-                    </Link>
+                  <button
+                    onClick={() => logout()}
+                    title="Logout Admin"
+                    className="p-2 rounded-xl border border-slate-200 hover:bg-red-50 hover:border-red-200 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                /* Customer / Vendor: Profile Dropdown */
+                <div className="relative hidden lg:block" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsUserMenuOpen((prev) => !prev);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-orange-100 hover:border-orange-300 hover:bg-orange-50 transition-all cursor-pointer"
+                  >
+                    {currentUser.image ? (
+                      <img src={currentUser.image} alt={currentUser.name} className="w-6 h-6 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold">
+                        {currentUser.name[0]}
+                      </div>
+                    )}
+                    <span className="text-xs font-semibold text-slate-700 max-w-24 truncate">{currentUser.name.split(' ')[0]}</span>
+                    <ChevronDown className="w-3 h-3 text-slate-400" />
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-orange-100 py-2 z-50">
+                      <div className="px-4 py-2 border-b border-slate-100">
+                        <p className="text-xs font-bold text-slate-800">{currentUser.name}</p>
+                        <p className="text-[10px] text-slate-500">{currentUser.email}</p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${
+                          currentUser.role === 'VENDOR' ? 'bg-sky-100 text-sky-600' : 'bg-orange-100 text-orange-600'
+                        }`}>{currentUser.role}</span>
+                      </div>
+                      <Link href="/orders" onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-orange-50 hover:text-orange-600">
+                        <Package className="w-4 h-4" /> My Orders
+                      </Link>
+                      {currentUser.role === 'VENDOR' && (
+                        <Link href="/vendor" onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-600">
+                          <LayoutDashboard className="w-4 h-4" /> Vendor Dashboard
+                        </Link>
+                      )}
+                      <div className="border-t border-slate-100 mt-1 pt-1">
+                        <button
+                          onClick={() => { logout(); setIsUserMenuOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 hover:bg-red-50"
+                        >
+                          <LogOut className="w-4 h-4" /> Logout
+                        </button>
+                      </div>
+                    </div>
                   )}
-                  {currentUser.role === 'ADMIN' && (
-                    <Link href="/admin" onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-red-600">
-                      <ShieldCheck className="w-4 h-4" /> Admin Console
-                    </Link>
-                  )}
-                  <div className="border-t border-slate-100 mt-1 pt-1">
-                    <button
-                      onClick={() => { logout(); setIsUserMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 hover:bg-red-50"
-                    >
-                      <LogOut className="w-4 h-4" /> Logout
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
@@ -355,8 +456,16 @@ export function Navbar() {
 
           {isAuthenticated && currentUser && (
             <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
-              {currentUser.image && (
+              {currentUser.role === 'ADMIN' ? (
+                <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-white" />
+                </div>
+              ) : currentUser.image ? (
                 <img src={currentUser.image} alt="" className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  {currentUser.name[0]}
+                </div>
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-800 truncate">{currentUser.name}</p>

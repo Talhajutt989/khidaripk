@@ -222,8 +222,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-semibold text-slate-700 flex items-center gap-1"><Phone className="w-3 h-3" /> WhatsApp / Phone *</label>
-                  <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="input-field" placeholder="03XX-XXXXXXX" />
-                  <p className="text-[10px] text-slate-400">Order updates اس نمبر پر WhatsApp کیے جائیں گے</p>
+                  <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className={`input-field ${phone.length > 0 && !/^[0-9+\s-]+$/.test(phone) ? '!border-red-500 !border-2 !text-red-500 !bg-red-50 focus:!border-red-500 focus:!ring-red-500' : ''}`} placeholder="03XX-XXXXXXX" />
+                  {phone.length > 0 && !/^[0-9+\s-]+$/.test(phone) ? (
+                    <p className="text-[10px] text-red-500 font-semibold flex items-center gap-1">❌ برائے مہربانی صرف نمبرز لکھیں (Alphabets منع ہیں)</p>
+                  ) : (
+                    <p className="text-[10px] text-slate-400">Order updates اس نمبر پر WhatsApp کیے جائیں گے</p>
+                  )}
                 </div>
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-semibold text-slate-700 flex items-center gap-1"><Home className="w-3 h-3" /> House / Flat # *</label>
@@ -257,7 +261,7 @@ export default function CheckoutPage() {
               <div className="p-5 pt-0">
                 <button
                   onClick={() => setStep(2)}
-                  disabled={!fullName || !phone || !houseNo || !street}
+                  disabled={!fullName || !phone || !/^[0-9+\s-]+$/.test(phone) || !houseNo || !street}
                   className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   Payment Method منتخب کریں <ChevronRight className="w-4 h-4" />
