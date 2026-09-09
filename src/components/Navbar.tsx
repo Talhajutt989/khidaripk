@@ -97,18 +97,18 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full glass-nav">
       {/* ── Top Announcement Bar ────────────────── */}
       <div
-        style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
-        className="text-white text-xs py-2 px-4"
+        style={{ background: 'linear-gradient(135deg, #ea580c, #c2410c)' }}
+        className="text-white text-xs py-2 px-4 border-b border-orange-400/20"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Ticker */}
           <div className="ticker-wrap flex-1 hidden sm:block">
-            <div className="ticker-content text-orange-100">
-              🚚 PKR 2,000+ orders پر free delivery &nbsp;&nbsp;|&nbsp;&nbsp; 📦 TCS, Leopard, Trax se fast shipping &nbsp;&nbsp;|&nbsp;&nbsp; ✅ 7-din return guarantee &nbsp;&nbsp;|&nbsp;&nbsp; 💳 JazzCash, Easypaisa, COD accepted &nbsp;&nbsp;|&nbsp;&nbsp; 🌟 Pakistan ka sabse bada online bazaar &nbsp;&nbsp;|&nbsp;&nbsp; 🚚 PKR 2,000+ orders پر free delivery &nbsp;&nbsp;|&nbsp;&nbsp; 📦 TCS, Leopard, Trax se fast shipping
+            <div className="ticker-content text-amber-100 font-medium">
+              🔥 KHARIDARI 2.0 LIVE — Up to 70% OFF &nbsp;&nbsp;|&nbsp;&nbsp; 🚚 PKR 2,000+ orders پر FREE Delivery &nbsp;&nbsp;|&nbsp;&nbsp; 📦 TCS, Leopard, Trax Fast Shipping &nbsp;&nbsp;|&nbsp;&nbsp; 🛡️ 100% CNIC Verified Vendors &nbsp;&nbsp;|&nbsp;&nbsp; 💳 JazzCash, Easypaisa, COD Accepted &nbsp;&nbsp;|&nbsp;&nbsp; 🔥 KHARIDARI 2.0 LIVE — Up to 70% OFF
             </div>
           </div>
-          <div className="sm:hidden text-orange-100 text-[11px] font-medium">
-            🚚 PKR 2,000+ پر free delivery
+          <div className="sm:hidden text-amber-100 text-[11px] font-bold">
+            🔥 KHARIDARI 2.0 LIVE — Up to 70% OFF!
           </div>
 
           {/* City Selector */}
