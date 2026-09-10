@@ -67,7 +67,7 @@ export async function notifyOrderPlaced(params: {
           parameters: [
             { type: 'text', text: params.customerName },
             { type: 'text', text: params.orderId },
-            { type: 'text', text: `₨ ${params.totalAmount}` },
+            { type: 'text', text: `Rs. ${params.totalAmount}` },
             { type: 'text', text: params.paymentMethod },
           ],
         },
@@ -177,7 +177,7 @@ export async function notifyVendorPayoutReady(params: {
     to: `92${params.phone.replace(/^0/, '')}`,
     type: 'text',
     text: {
-      body: `🎉 Kharidari.pk — ${params.vendorName}, آپ کی رقم ₨ ${params.amount} ادائیگی کے لیے تیار ہے! Bank transfer ابھی request کریں۔`,
+      body: `🎉 Kharidari.pk — ${params.vendorName}, آپ کی رقم Rs. ${params.amount} ادائیگی کے لیے تیار ہے! Bank transfer ابھی request کریں۔`,
     },
   };
   return sendWhatsAppRequest(payload);
@@ -185,5 +185,5 @@ export async function notifyVendorPayoutReady(params: {
 
 // ─── PKR Formatter ───────────────────────────
 export function formatPKR(amount: number): string {
-  return `₨ ${amount.toLocaleString('en-PK')}`;
+  return `Rs. ${amount.toLocaleString('en-PK')}`;
 }

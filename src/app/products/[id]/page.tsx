@@ -172,11 +172,11 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="flex items-baseline gap-3 pt-1">
               <span className="text-3xl font-black text-slate-900 dark:text-white">
-                ${product.price.toFixed(2)}
+                Rs. {product.price.toFixed(2)}
               </span>
               {product.originalPrice && (
                 <span className="text-base text-slate-400 line-through">
-                  ${product.originalPrice.toFixed(2)}
+                  Rs. {product.originalPrice.toFixed(2)}
                 </span>
               )}
             </div>
@@ -256,7 +256,7 @@ export default function ProductDetailPage() {
                   className="flex-1 py-3 px-6 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 disabled:opacity-50 active:scale-[0.99]"
                 >
                   <ShoppingBag className="w-5 h-5" />
-                  <span>Add to Bag &bull; ${(product.price * quantity).toFixed(2)}</span>
+                  <span>Add to Bag &bull; Rs. {(product.price * quantity).toFixed(2)}</span>
                 </button>
               </div>
 

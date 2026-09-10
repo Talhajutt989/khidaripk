@@ -876,7 +876,7 @@ export const INITIAL_KYC: KycApplication[] = [
 
 // ─── Helper: Format PKR ──────────────────────
 export function formatPKR(amount: number): string {
-  return `₨ ${amount.toLocaleString('en-PK')}`;
+  return `Rs. ${amount.toLocaleString('en-PK')}`;
 }
 
 // ─── Flash Sale End Time ─────────────────────

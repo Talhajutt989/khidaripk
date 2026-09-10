@@ -147,7 +147,7 @@ export function CartDrawer() {
                 <Truck className="w-4 h-4 shrink-0" />
                 {deliveryFee === 0
                   ? '🎉 مبارک ہو! آپ کو free delivery مل گئی'
-                  : `₨ ${2000 - total} مزید خریدیں اور free delivery حاصل کریں`
+                  : `Rs. ${2000 - total} مزید خریدیں اور free delivery حاصل کریں`
                 }
               </div>
 
